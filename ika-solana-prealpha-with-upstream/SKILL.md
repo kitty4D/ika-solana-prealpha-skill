@@ -9,7 +9,9 @@ Normative documentation: [solana pre-alpha docs](https://solana-pre-alpha.ika.xy
 
 ## pre-alpha disclaimer (non-negotiable)
 
-- **Mock signer** - not production MPC; do not rely on security properties.
+- Solana pre-alpha is for **SDK exploration and dev only**.
+- **No real MPC** — a **single mock signer**, not a distributed network.
+- **Do not submit real-value (mainnet / production) transactions for signing** or rely on security guarantees. Keys, trust model, and protocol are **not final**; **do not rely on key material** until mainnet.
 - **Devnet resets** - state and interfaces may change without notice.
 - **No warranty** - use at your own risk.
 
