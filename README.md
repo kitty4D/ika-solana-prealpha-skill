@@ -5,7 +5,7 @@ unofficial agent skill bundles for [ika](https://ika.xyz/) on Solana pre-alpha: 
 source: [github.com/kitty4D/ika-solana-prealpha-skill](https://github.com/kitty4D/ika-solana-prealpha-skill)
 
 > *gets ready with a cute little folder stack and way too much sincerity*  
-> e-eh, senpai... d-do you like it when your `SKILL.md` looks **intentional** and not like a yard sale?? ika-chan might be watching from the ink tank uwu (｡>ω<｡) b-but no pressure- only a little pressure~ 🦑✨
+> e-eh, senpai... d-do you like it when your `SKILL.md` looks **intentional** and not like a yard sale?? ika-chan might be watching from the ink tank uwu <span style="white-space: nowrap;">(&#8288;｡&#8288;>&#8288;ω&#8288;<&#8288;｡&#8288;)</span> b-but no pressure- only a little pressure~ <span style="white-space: nowrap;">🦑&#8288;✨</span>
 
 ## what ika is
 
@@ -14,7 +14,7 @@ source: [github.com/kitty4D/ika-solana-prealpha-skill](https://github.com/kitty4
 this repo only targets solana pre-alpha integration (devnet, mock signer, gRPC, CPI SDKs). it isn't the full production ika stack; treat [solana pre-alpha.ika.xyz](https://solana-pre-alpha.ika.xyz/) and [dwallet-labs/ika-pre-alpha](https://github.com/dwallet-labs/ika-pre-alpha) as normative when something here disagrees.
 
 > *waves a sticky note scribbled with pda seeds like it's a concert ticket*  
-> onii-chain, the whole arc is "logic on solana, completion with ika"- not "wrap the asset and hope the bridge had coffee" hours (´∀｀) pre-alpha devnet is still sandcastle mode tho... mock signer, resets, m-maybe don't bet the farm on it senpai 💦🦑
+> onii-chain, the whole arc is "logic on solana, completion with ika"- not "wrap the asset and hope the bridge had coffee" hours <span style="white-space: nowrap;">(&#8288;´&#8288;∀&#8288;｀&#8288;)</span> pre-alpha devnet is still sandcastle mode tho... mock signer, resets, m-maybe don't bet the farm on it senpai <span style="white-space: nowrap;">💦&#8288;🦑</span>
 
 ## what's in the box
 
@@ -33,7 +33,7 @@ phrases like **upstream book** in the reference files mean the hosted mdbook / `
 > ```
 > A is shy: skills only, no "go diff `main` for me" homework  
 > B adds `upstream.md` drift watch- **still one purchase**, ne?  
-> y-you weren't about to frankenstein both rows... r-right, senpai? uwu 🦑💦
+> y-you weren't about to frankenstein both rows... r-right, senpai? uwu <span style="white-space: nowrap;">🦑&#8288;💦</span>
 
 ## install
 
@@ -41,7 +41,7 @@ layout for both bundles: `SKILL.md` at the skill root and the `references/` dire
 
 > *hides `references/` half-behind `SKILL.md` like a shy roommate*  
 > we're copying **one** bundle as-is, ok?? same folder, same siblings, no remix culture-  
-> m-mixing halves is how ika-chan gets the scary merge-conflict twitch (；一_一) j-just pick one path uwu 🦑
+> m-mixing halves is how ika-chan gets the scary merge-conflict twitch <span style="white-space: nowrap;">(&#8288;；&#8288;一&#8288;_&#8288;一&#8288;)</span> j-just pick one path uwu <span style="white-space: nowrap;">🦑</span>
 
 ### cursor
 
@@ -56,8 +56,8 @@ claude code loads skills from a `SKILL.md` file inside a skill directory (common
 anything that can ingest a markdown skill manifest plus linked reference files the same way (open folder, or single root doc with relative links) should work: keep the directory intact and point the tool at the folder or at `SKILL.md` per its docs.
 
 > *does warm-up stretches that won't fix your CPI layout anyway*  
-> cursor-kun, claude-kun, mystery tool-kun- if you eat `SKILL.md` plus neighbor markdown, you're in the club (´･ω･`)  
-> do bring your half-baked gRPC prints and your "account meta soup"- ika-chan isn't here to gatekeep markdown,,, only to bully it gently uwu 🦑✨
+> cursor-kun, claude-kun, mystery tool-kun- if you eat `SKILL.md` plus neighbor markdown, you're in the club <span style="white-space: nowrap;">(&#8288;´&#8288;･&#8288;ω&#8288;･&#8288;`&#8288;)</span>  
+> do bring your half-baked gRPC prints and your "account meta soup"- ika-chan isn't here to gatekeep markdown,,, only to bully it gently uwu <span style="white-space: nowrap;">🦑&#8288;✨</span>
 
 ## scope (quick)
 
@@ -65,7 +65,7 @@ gRPC `DWalletService`, BCS shapes, devnet program id + RPC table inside `SKILL.m
 
 > *gets ready with a cute label-maker and nervous energy*  
 > CC-BY-chan isn't trying to ruin the mood- she wants names, links, and n-no "dWallet Labs hand-delivered this readme" cosplay ok?  
-> p-peek [`NOTICE`](NOTICE) before you mirror big chunks,,, n-not your lawyer, just your overly responsible ika uwu 📜🦑
+> p-peek [`NOTICE`](NOTICE) before you mirror big chunks,,, n-not your lawyer, just your overly responsible ika uwu <span style="white-space: nowrap;">📜&#8288;🦑</span>
 
 ## license and attribution
 
