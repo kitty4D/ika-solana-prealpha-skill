@@ -1,6 +1,6 @@
 # ika solana pre-alpha agent skills
 
-unofficial agent skill bundles for [ika](https://ika.xyz/) on Solana pre-alpha: same content in two folders so you can choose whether the agent also gets maintainer-style drift notes against upstream.
+**unofficial** agent skill bundle for [ika](https://ika.xyz/) on Solana pre-alpha (`skills/ika-solana-prealpha/`).
 
 source: [github.com/kitty4D/ika-solana-prealpha-skill](https://github.com/kitty4D/ika-solana-prealpha-skill)
 
@@ -25,42 +25,50 @@ this repo only targets solana pre-alpha integration (devnet, mock signer, gRPC, 
 
 ## what's in the box
 
-| folder | vibe |
+| path | contents |
 | --- | --- |
-| `ika-solana-prealpha/` | consumer bundle: `SKILL.md` + `references/` only. nothing telling the agent to edit this skill to track upstream `main`. |
-| `ika-solana-prealpha-with-upstream/` | same, plus [`references/upstream.md`](ika-solana-prealpha-with-upstream/references/upstream.md) (tracked commit, drift checks, what to refresh when upstream moves). |
+| `skills/ika-solana-prealpha/` | `SKILL.md` + `references/` (including [`references/docs-revision.md`](skills/ika-solana-prealpha/references/docs-revision.md)). |
 
-phrases like **upstream book** in the reference files mean the hosted mdbook / `docs/` in [ika-pre-alpha](https://github.com/dwallet-labs/ika-pre-alpha), not `upstream.md`.
+[`docs-revision.md`](skills/ika-solana-prealpha/references/docs-revision.md) records which **`docs/`** commit in [ika-pre-alpha](https://github.com/dwallet-labs/ika-pre-alpha) this bundle was last aligned with. if **`docs/`** on `main` has changed since then, the hosted book may be ahead of what’s here—when in doubt, trust the live [solana pre-alpha docs](https://solana-pre-alpha.ika.xyz/) or an updated copy of this repo from me, kitty4d. if you use this as an editor skill and the summary feels wrong, you can turn the skill off until you’re happy with a fresher version.
 
-> *pokes the skill vending machine buttons with both index fingers*  
-> ```
-> +------- ika-chan restock --------+
-> | [A] chill pack   [B] + upstream |
-> +---------------------------------+
-> ```
-> A is shy: skills only, no "go diff `main` for me" homework  
-> B adds `upstream.md` drift watch- **still one purchase**, ne?  
-> y-you weren't about to frankenstein both rows... r-right, senpai? uwu <span style="white-space: nowrap;">🦑&#8288;💦</span>
+
+## ika on sui (mainnet)
+
+ika on **sui** is on **mainnet**. dWallet Labs ships **official** agent skills for ika on Sui (Move contracts, `@ika.xyz/sdk`, operator, CLI) in the [`skills/` directory](https://github.com/dwallet-labs/ika/tree/main/skills) of the [`ika` repo](https://github.com/dwallet-labs/ika)—see [that README](https://github.com/dwallet-labs/ika/blob/main/skills/README.md) for what each skill covers and how to install. this repo is **only** the unofficial Solana pre-alpha skill; use the official Sui skills for production sui work.
 
 ## install
 
-layout for both bundles: `SKILL.md` at the skill root and the `references/` directory next to it. copy **one** folder wholesale; don't mix files between the two variants.
+in this repo the skill lives under **`skills/ika-solana-prealpha/`** (a common **skill package** layout so installers can find it). inside that folder: `SKILL.md` at the skill root and `references/` beside it.
+
+### `npx skills` ([skills.sh](https://skills.sh/) / Vercel CLI)
+
+Vercel’s [agent skills guide](https://vercel.com/kb/guide/agent-skills-creating-installing-and-sharing-reusable-agent-context) describes a **skill package** as a repo (or directory) that contains one or more skills; installs can target the **whole repo** or a **path to one skill**. Examples in that doc use a `skills/<skill-name>/` tree, same as here.
+
+```bash
+# explicit path to this skill (works even if the CLI’s repo-wide discovery differs)
+npx skills add https://github.com/kitty4D/ika-solana-prealpha-skill/tree/main/skills/ika-solana-prealpha
+
+# optional: install from repo + skill name (if your CLI version supports --skill / discovery)
+npx skills add kitty4D/ika-solana-prealpha-skill --skill ika-solana-prealpha
+```
+
+add `-g` for a global (user-wide) install when supported. see [skills.sh CLI docs](https://skills.sh/docs/cli) and `npx skills --help` for your version.
 
 > *hides `references/` half-behind `SKILL.md` like a shy roommate*  
-> we're copying **one** bundle as-is, ok?? same folder, same siblings, no remix culture-  
-> m-mixing halves is how ika-chan gets the scary merge-conflict twitch <span style="white-space: nowrap;">(&#8288;；&#8288;一&#8288;_&#8288;一&#8288;)</span> j-just pick one path uwu <span style="white-space: nowrap;">🦑</span>
+> we're copying **one** skill folder as-is, ok?? same siblings, no remix culture-  
+> frankensteining random markdown from other repos is how ika-chan gets the scary merge-conflict twitch <span style="white-space: nowrap;">(&#8288;；&#8288;一&#8288;_&#8288;一&#8288;)</span> j-just use this bundle uwu <span style="white-space: nowrap;">🦑</span>
 
 ### cursor
 
-use [cursor agent skills](https://cursor.com/docs/context/skills): add the chosen folder under your project or user skills path so the editor loads `SKILL.md` and can pull in `references/` when needed.
+use [cursor agent skills](https://cursor.com/docs/context/skills): copy **`skills/ika-solana-prealpha/`** into your project or user skills location (so the installed folder is still named `ika-solana-prealpha` and matches the skill `name` in frontmatter), or point the tool at that path.
 
 ### claude code
 
-claude code loads skills from a `SKILL.md` file inside a skill directory (commonly `~/.claude/skills/<skill-name>/` for user-wide skills, or `.claude/skills/<skill-name>/` in a project). copy one bundle into such a directory so `SKILL.md` and `references/` stay siblings. if your claude app version uses a different path, match whatever that product docs call a "skill" or "plugin" directory as long as the same file layout is preserved.
+claude code expects each skill as a directory containing `SKILL.md` (often `~/.claude/skills/<skill-name>/` or `.claude/skills/<skill-name>/` in a project). copy **`skills/ika-solana-prealpha/`** from this repo to `.../skills/ika-solana-prealpha/` so `SKILL.md` and `references/` stay siblings. if your app version uses a different path, follow its docs as long as the layout is preserved.
 
 ### other assistants
 
-anything that can ingest a markdown skill manifest plus linked reference files the same way (open folder, or single root doc with relative links) should work: keep the directory intact and point the tool at the folder or at `SKILL.md` per its docs.
+anything that can ingest a markdown skill manifest plus linked reference files the same way (open folder, or single root doc with relative links) should work: keep the skill directory intact and point the tool at the folder or at `SKILL.md` per its docs.
 
 > *does warm-up stretches that won't fix your CPI layout anyway*  
 > cursor-kun, claude-kun, mystery tool-kun- if you eat `SKILL.md` plus neighbor markdown, you're in the club <span style="white-space: nowrap;">(&#8288;´&#8288;･&#8288;ω&#8288;･&#8288;`&#8288;)</span>  

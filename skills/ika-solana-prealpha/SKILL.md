@@ -5,7 +5,9 @@ description: Guide for Ika dWallet on Solana pre-alpha - gRPC DWalletService, BC
 
 # ika solana pre-alpha
 
-Normative documentation: [solana pre-alpha docs](https://solana-pre-alpha.ika.xyz/) (mdbook sources live in [dwallet-labs/ika-pre-alpha](https://github.com/dwallet-labs/ika-pre-alpha), `docs/`). This skill summarizes workflows; load `references/` for BCS, layouts, and instruction tables. To see whether the skill may lag upstream, read [`references/upstream.md`](references/upstream.md) (tracked commit + drift checks).
+Normative documentation: [solana pre-alpha docs](https://solana-pre-alpha.ika.xyz/) (mdbook sources live in [dwallet-labs/ika-pre-alpha](https://github.com/dwallet-labs/ika-pre-alpha), `docs/`). This skill summarizes workflows; load `references/` for BCS, layouts, and instruction tables.
+
+**Docs revision:** [`references/docs-revision.md`](references/docs-revision.md) records the **git commit** this skill was aligned against for **`docs/`** only. If the mdbook sources on `main` have changed since that commit (see that file), **notify the human user** that ika-pre-alpha docs have moved ahead, this skill may be outdated, and they may wish to **disable this skill** until they obtain an updated bundle or re-verify against the live book.
 
 ## pre-alpha disclaimer (non-negotiable)
 
@@ -21,13 +23,13 @@ Normative documentation: [solana pre-alpha docs](https://solana-pre-alpha.ika.xy
 
 | file | when to load it |
 | --- | --- |
+| [`references/docs-revision.md`](references/docs-revision.md) | Tracked **`docs/`** commit vs `ika-pre-alpha` `main`; if `docs/` changed, notify user—do not patch skill files; user may disable skill until updated |
 | [`references/grpc-api.md`](references/grpc-api.md) | `SubmitTransaction`, `UserSignedRequest`, BCS `DWalletRequest` / `SignedRequestData`, `ApprovalProof::Solana`, presign RPCs, enum wire values |
 | [`references/account-layouts.md`](references/account-layouts.md) | PDA seeds, byte offsets, rent helper, `MessageApproval` / `DWallet`, ika system accounts |
 | [`references/instructions.md`](references/instructions.md) | Instruction discriminators, account metas, ix data; voting and multisig **example** programs |
 | [`references/events.md`](references/events.md) | Self-CPI event layout vs polling `MessageApproval` |
 | [`references/frameworks.md`](references/frameworks.md) | `DWalletContext`, framework choice, dependencies |
 | [`references/flows.md`](references/flows.md) | Ordered DKG, sign, CPI, presign, authority, verification, demo lifecycles |
-| [`references/upstream.md`](references/upstream.md) | Repo layout, what to pull from ika-pre-alpha, **tracked `main` commit**, commands to detect skill drift |
 
 ## install
 
@@ -56,7 +58,7 @@ pnpm add @ika.xyz/pre-alpha-solana-client @solana/kit
 | dWallet program id | `87W54kGYFQ1rgWqMeu4XTPHWXWmXSQCcjm8vCTfiq1oY` |
 | source repo | `https://github.com/dwallet-labs/ika-pre-alpha` |
 
-**Canonical values:** Treat this table as the single source for program id, gRPC URL, default Solana RPC, and ika `git` remote. Other files link here; literals inside code samples are for copy-paste and must stay aligned with this table. The **upstream git commit** this skill was last checked against is recorded in [`references/upstream.md`](references/upstream.md).
+**Canonical values:** Treat this table as the single source for program id, gRPC URL, default Solana RPC, and ika `git` remote. Other files link here; literals inside code samples are for copy-paste and must stay aligned with this table.
 
 Devnet plus gRPC suffice for baseline integration without a local validator.
 
