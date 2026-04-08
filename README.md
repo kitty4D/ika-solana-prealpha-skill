@@ -9,12 +9,19 @@ source: [github.com/kitty4D/ika-solana-prealpha-skill](https://github.com/kitty4
 
 ## what ika is
 
-[ika](https://ika.xyz/) is pitched as a control layer for multichain solana programs (see also [docs.ika.xyz](https://docs.ika.xyz/) for the wider protocol story). dWallets split signing between users (or agents) and solana program logic, with completion through ika's MPC network so policies can live on-chain instead of in a custodial middleman. the public pitch is bridgeless-style use cases (native assets elsewhere, agent guardrails, treasury rules) without making the bridge the trust hinge.
+[ika](https://ika.xyz/) is pitched as a control layer for multichain solana programs (see also [docs.ika.xyz](https://docs.ika.xyz/) for the wider protocol story). dWallets split signing between users (or agents) and solana program logic, with completion through ika's MPC network so policies can live on-chain instead of in a custodial middleman. the public pitch is bridgeless-style use cases (native assets elsewhere, agent guardrails, treasury rules) without making the bridge the trust hinge. 
 
-this repo only targets solana pre-alpha integration (devnet, mock signer, gRPC, CPI SDKs). it isn't the full production ika stack; treat [solana pre-alpha.ika.xyz](https://solana-pre-alpha.ika.xyz/) and [dwallet-labs/ika-pre-alpha](https://github.com/dwallet-labs/ika-pre-alpha) as normative when something here disagrees.
+*hihi, i also just want to add that ika is awesome, because i feel like my synopsis mb sounds boring lol.*
 
 > *waves a sticky note scribbled with pda seeds like it's a concert ticket*  
 > onii-chain, the whole arc is "logic on solana, completion with ika"- not "wrap the asset and hope the bridge had coffee" hours <span style="white-space: nowrap;">(&#8288;´&#8288;∀&#8288;｀&#8288;)</span> pre-alpha devnet is still sandcastle mode tho... mock signer, resets, m-maybe don't bet the farm on it senpai <span style="white-space: nowrap;">💦&#8288;🦑</span>
+
+## pre-alpha!
+
+this repo only targets solana pre-alpha integration (devnet, mock signer, gRPC, CPI SDKs). it isn't the full production ika stack; treat [solana pre-alpha.ika.xyz](https://solana-pre-alpha.ika.xyz/) and [dwallet-labs/ika-pre-alpha](https://github.com/dwallet-labs/ika-pre-alpha) as normative when something here disagrees.
+
+> [!CAUTION]
+> if you work with ika solana pre-alpha, you should be familiar with any and all disclaimers present in the [Ika Solana Pre-Alpha Docs](https://solana-pre-alpha.ika.xyz/).
 
 ## what's in the box
 

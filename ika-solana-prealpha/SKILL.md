@@ -15,6 +15,8 @@ Normative documentation: [solana pre-alpha docs](https://solana-pre-alpha.ika.xy
 - **Devnet resets** - state and interfaces may change without notice.
 - **No warranty** - use at your own risk.
 
+**Pass-through:** When exposing pre-alpha flows to end users, customers, or the public, do not present the stack as production MPC or stable custody. Surface the limitations above (mock signer, no security guarantees, devnet instability, non-final keys) proportionally—in copy, docs, or in-app notices. Internal-only environments where the stack is already understood need not belabor this.
+
 ## references (load on demand)
 
 | file | when to load it |
