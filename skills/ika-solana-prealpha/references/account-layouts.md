@@ -3,7 +3,7 @@
 ## table of contents
 
 1. Rent helper (book / examples)
-2. dWallet program accounts (coordinator, NEK, DWallet, MessageApproval)
+2. dWallet program accounts (coordinator, NEK, **DWallet chunked PDA seeds**, MessageApproval)
 3. CPI authority PDA
 4. Ika system accounts (`ika-solana-sdk-types`)
 5. Voting + multisig example accounts
@@ -42,7 +42,13 @@ On-chain: use `Rent::get()?.minimum_balance(data_len)`. Clients: use RPC rent wh
 | 3 | NetworkEncryptionKey |
 | 14 | MessageApproval |
 
-`DWallet` uses the on-chain type discriminator at byte 0; seeds `["dwallet", curve_byte, public_key]`.
+`DWallet` uses the on-chain type discriminator at byte 0; PDA seeds are **`["dwallet", ...chunks]`** where `chunks` splits **`(curve_byte || raw_public_key)`** into **32-byte** pieces (Solana `MAX_SEED_LEN`), each passed as its own seed. Concatenate curve (1 byte) and pubkey, then `chunks(32)`.
+
+| pubkey | payload `curve \|\| pk` | chunk sizes |
+| --- | --- | --- |
+| 32 bytes (Ed25519 / Curve25519 / Ristretto) | 33 bytes | `[32, 1]` |
+| 33 bytes (compressed Secp256k1 / Secp256r1) | 34 bytes | `[32, 2]` |
+| 65 bytes (uncompressed SEC1) | 66 bytes | `[32, 32, 2]` |
 
 ---
 
@@ -74,7 +80,7 @@ Read NEK bytes from chain for `dwallet_network_encryption_public_key` in DKG req
 
 ### DWallet
 
-- **PDA seeds:** `["dwallet", curve_byte, public_key_bytes]`
+- **PDA seeds:** `["dwallet", chunks_of(curve_byte || public_key)]` (32-byte chunks; see table above)
 
 | offset | field | size | notes |
 | --- | --- | --- | --- |
@@ -205,7 +211,7 @@ Field-level layouts for multisig accounts: [`instructions.md`](instructions.md) 
 | DWalletCoordinator | 1 | 116 | `["dwallet_coordinator"]` | dWallet |
 | NetworkEncryptionKey | 3 | 164 | `["network_encryption_key", noa]` | dWallet |
 | MessageApproval | 14 | 287 | `["message_approval", dwallet, hash]` | dWallet |
-| DWallet | (type) | see above | `["dwallet", curve, pk]` | dWallet |
+| DWallet | (type) | see above | `["dwallet", chunks_of(curve \|\| pk)]` | dWallet |
 | SystemState | 1 | 365 | `["ika_system_state"]` | Ika system |
 | Validator | 2 | 973 | `["validator", identity]` | Ika system |
 | StakeAccount | 3 | 115 | `["stake_account", stake_id]` | Ika system |

@@ -4,12 +4,12 @@
 
 1. Service definition
 2. UserSignedRequest, UserSignature, SignedRequestData
-3. DWalletRequest (BCS enum), DKG / Sign fields, mock matrix
+3. DWalletRequest (BCS enum), DKG / Sign fields, mock matrix, **mock `hash_scheme` rules**
 4. ApprovalProof
-5. TransactionResponse, TransactionResponseData
+5. TransactionResponse, TransactionResponseData (incl. **Error** for bad `hash_scheme`)
 6. Query RPCs (GetPresigns, GetPresignsForDWallet)
 7. BCS notes, minimal Rust client
-8. Crypto parameter enums (BCS)
+8. Crypto parameter enums (BCS) — **DWalletHashScheme** per-curve table
 
 Mutations use **`SubmitTransaction`**. Protobuf carries **BCS** payloads in `bytes` fields.
 
@@ -100,8 +100,8 @@ Exact struct fields: upstream book and `ika-dwallet-types`.
 | --- | --- |
 | `DKG { ... }` | supported; on-chain commit + authority per current mock behavior |
 | `DKGWithPublicShare { ... }` | supported (mock equivalent to DKG) |
-| `Sign { ... }` | supported |
-| `ImportedKeySign { ... }` | supported (mock same as Sign) |
+| `Sign { ... }` | supported; see **Sign fields** and **mock `hash_scheme`** below |
+| `ImportedKeySign { ... }` | supported (mock same as `Sign` for hashing rules) |
 | `Presign { ... }` | supported |
 | `PresignForDWallet { ... }` | supported |
 | `ImportedKeyVerification` | error |
@@ -137,7 +137,13 @@ DWalletRequest::Sign {
 }
 ```
 
-Pre-alpha mock: `signature_algorithm` and `hash_scheme` are **accepted and ignored**.
+**Pre-alpha mock (Sign / ImportedKeySign):** `hash_scheme` is **not** ignored. The client must declare a scheme that applies to the dWallet’s curve; anything else is rejected (see **`TransactionResponseData::Error`**).
+
+- **Secp256k1:** `Keccak256`, `SHA256`, or `DoubleSHA256` — network applies that hash to the `message` bytes you sent, then signs the resulting **32-byte digest** via `sign_prehash` with **low-s** normalization (BIP146 / EIP-2). Signatures are valid on destination chains that expect that digest (EVM, Bitcoin BIP143, etc.).
+- **Ed25519 (Curve25519 dWallet):** `hash_scheme` must be **`SHA512`** — the only hash the Ed25519 algorithm uses internally (RFC 8032). The mock requires it explicitly on the wire; `ed25519-dalek` applies hashing internally.
+- **Unsupported** `hash_scheme` for the curve: mock returns `TransactionResponseData::Error` with a message like `hash_scheme <Variant> is not supported for this signature`. The **gRPC HTTP call still succeeds** (e.g. 200); the error is in the **BCS** `response_data`.
+
+**On-chain vs signing digest:** `MessageApproval.message_hash` (third PDA seed) is **always** `keccak256(preimage)` — a **uniqueness key**, not necessarily the bytes the network signs. For EVM that often matches the signed digest; for Bitcoin BIP143 the PDA key and `DoubleSHA256(message)` digest differ. See [`instructions.md`](instructions.md) / [`../SKILL.md`](../SKILL.md).
 
 ---
 
@@ -192,7 +198,7 @@ pub enum TransactionResponseData {
 | `Signature` | `Sign` / `ImportedKeySign` (64-byte algorithms as documented) |
 | `Attestation` | `DKG` / `DKGWithPublicShare` → input to `commit_dwallet` |
 | `Presign` | `Presign` / `PresignForDWallet` |
-| `Error` | handle before other variants |
+| `Error` | Bad `hash_scheme` / other request validation; **parse `message`** before treating as success. HTTP layer can still be OK. |
 
 ---
 
@@ -269,6 +275,18 @@ let result: TransactionResponseData = bcs::from_bytes(&tx_response.response_data
 
 **DWalletSignatureAlgorithm (index):** ECDSASecp256k1(0), ECDSASecp256r1(1), Taproot(2), EdDSA(3), SchnorrkelSubstrate(4)
 
-**DWalletHashScheme (index):** Keccak256(0), SHA256(1), DoubleSHA256(2), SHA512(3), Merlin(4)
+### DWalletHashScheme (index)
+
+`hash_scheme` selects how the mock builds the material to sign: **Secp256k1** — hash `message` with the chosen algorithm, then ECDSA `sign_prehash`. **Ed25519** — declare **`SHA512`** on the wire; the implementation still takes the **preimage** `message` for RFC 8032 (`ed25519-dalek` hashes internally).
+
+| Variant | Index | Secp256k1 | Ed25519 |
+| --- | --- | --- | --- |
+| `Keccak256` | 0 | Supported | Rejected |
+| `SHA256` | 1 | Supported | Rejected |
+| `DoubleSHA256` | 2 | Supported | Rejected |
+| `SHA512` | 3 | Rejected | **Required** |
+| `Merlin` | 4 | Rejected | Rejected |
+
+Wrong variant for the curve → **`TransactionResponseData::Error`** in `response_data` (gRPC call still returns successfully at HTTP level).
 
 **ChainId:** Solana, Sui

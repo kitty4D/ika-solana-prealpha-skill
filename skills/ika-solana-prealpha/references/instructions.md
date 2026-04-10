@@ -49,7 +49,7 @@ Instruction data for discriminators **33-38** and **44-46** is not fully documen
 
 ## approve_message (disc 8)
 
-Creates **MessageApproval** PDA. **`message_hash`:** keccak256(message preimage); same convention as [`../SKILL.md`](../SKILL.md) (pre-alpha).
+Creates **MessageApproval** PDA. **`message_hash`:** **opaque 32-byte uniqueness key** for the PDA — must be **`keccak256(preimage)`** regardless of destination chain. Independent of gRPC **`Sign`** `hash_scheme` (which controls the digest actually signed). Same rule as [`../SKILL.md`](../SKILL.md).
 
 ### data - 67 bytes
 

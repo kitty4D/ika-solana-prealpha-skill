@@ -7,7 +7,7 @@
 3. Flow 3 - CPI approve_message
 4. Flow 4 - presign allocation
 5. Flow 5 - authority transfer
-6. Flow 6 - signature verification
+6. Flow 6 - signature verification (PDA `message_hash` vs signed digest)
 7. Flow 7 - voting e2e
 8. Flow 8 - multisig e2e
 
@@ -25,7 +25,18 @@ Normative documentation URL: [`../SKILL.md`](../SKILL.md). BCS and RPC: [`grpc-a
 4. Wrap in `UserSignedRequest` with `UserSignature` over `signed_request_data`.
 5. Call gRPC `SubmitTransaction`.
 6. Parse `TransactionResponseData::Attestation`.
-7. Submit **`commit_dwallet`** with attestation payload; confirm **DWallet** at `["dwallet", curve_byte, public_key]`.
+7. Submit **`commit_dwallet`** with attestation payload; derive **DWallet** PDA with chunked seeds `["dwallet", ...chunks]` where `chunks` splits `(curve_byte || public_key)` into 32-byte pieces ([`account-layouts.md`](account-layouts.md)):
+
+```rust
+let mut payload = Vec::with_capacity(1 + public_key.len());
+payload.push(curve_byte);
+payload.extend_from_slice(&public_key);
+let mut seeds: Vec<&[u8]> = vec![b"dwallet"];
+for chunk in payload.chunks(32) {
+    seeds.push(chunk);
+}
+let (dwallet_pda, _bump) = Pubkey::find_program_address(&seeds, &dwallet_program_id);
+```
 
 ---
 
@@ -38,8 +49,8 @@ Normative documentation URL: [`../SKILL.md`](../SKILL.md). BCS and RPC: [`grpc-a
 3. Submit **approve_message** (disc 8, direct signer metas): [`instructions.md`](instructions.md).
 4. Record `transaction_signature` and `slot` from the confirmed Solana transaction.
 5. Allocate **presign** if required: [`grpc-api.md`](grpc-api.md) `Presign` / `PresignForDWallet`.
-6. Submit `Sign` with `ApprovalProof::Solana { transaction_signature, slot }` and remaining fields per [`grpc-api.md`](grpc-api.md).
-7. Handle `TransactionResponseData::Signature`.
+6. Submit `Sign` with `ApprovalProof::Solana { transaction_signature, slot }`; set **`hash_scheme`** to a value valid for the dWallet curve (e.g. `SHA512` for Ed25519; `Keccak256` / `SHA256` / `DoubleSHA256` for Secp256k1) per [`grpc-api.md`](grpc-api.md).
+7. Handle `TransactionResponseData::Signature` or **`::Error`** (bad `hash_scheme`, etc.).
 8. Confirm completion via `MessageApproval` offsets ([`account-layouts.md`](account-layouts.md)) or **`SignatureCommitted`** ([`events.md`](events.md)).
 
 gRPC may return a signature before or in parallel with on-chain `commit_signature`; clients should tolerate ordering variance.
@@ -78,26 +89,31 @@ Request and response shapes: [`grpc-api.md`](grpc-api.md) (`Presign`, `PresignFo
 
 ## flow 6 - signature verification (off-chain)
 
+Verify using the **same bytes the network signed** on `Sign` — not necessarily the **MessageApproval PDA** `message_hash` (that value is always `keccak256(preimage)` for the on-chain key).
+
 **Ed25519 (Curve25519 dWallet)**
+
+gRPC **`Sign`** must use **`hash_scheme = SHA512`**. Verification uses the **message preimage** you placed in the `Sign` request (RFC 8032; `ed25519-dalek` hashes internally):
 
 ```rust
 use ed25519_dalek::{Signature, VerifyingKey};
 
 let verifying_key = VerifyingKey::from_bytes(&dwallet_public_key)?;
 let signature = Signature::from_bytes(&signature_bytes.try_into().unwrap())?;
-verifying_key.verify_strict(message_as_signed, &signature)?;
+verifying_key.verify_strict(&message_preimage, &signature)?;
 ```
 
-Use the preimage your application defines as signed; the pre-alpha book may show `message_hash` as the verified buffer for examples only.
-
 **Secp256k1**
+
+Build the **32-byte digest** with the **same** `hash_scheme` you sent on `Sign` (`Keccak256`, `SHA256`, or `DoubleSHA256` over your `message` bytes). Then verify ECDSA over that digest — **do not** use the PDA `message_hash` unless it happens to equal that digest (e.g. some EVM paths):
 
 ```rust
 use secp256k1::{Message, PublicKey, Secp256k1, ecdsa::Signature};
 
+let digest: [u8; 32] = /* hash_scheme(message) matching Sign */;
 let secp = Secp256k1::verification_only();
 let pubkey = PublicKey::from_slice(&dwallet_public_key)?;
-let message = Message::from_digest(message_hash);
+let message = Message::from_digest(digest);
 let signature = Signature::from_compact(&signature_bytes)?;
 secp.verify_ecdsa(&message, &signature, &pubkey)?;
 ```

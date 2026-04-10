@@ -1,6 +1,6 @@
 ---
 name: ika-solana-prealpha
-description: Guide for Ika dWallet on Solana pre-alpha - gRPC DWalletService, BCS request types, on-chain program (PDAs, approve_message, commit_dwallet, commit_signature), Pinocchio/Native/Anchor CPI SDKs, and @ika.xyz/pre-alpha-solana-client + @solana/kit. Use when integrating Solana ika, Solana dWallet, ika pre-alpha, dWallet Solana devnet, gRPC dWallet, approve_message Solana, MessageApproval PDA, DWalletContext, @ika.xyz/pre-alpha-solana-client, ika-dwallet-pinocchio, ika-dwallet-native, ika-dwallet-anchor, or comparing Solana pre-alpha to Sui ika-sdk.
+description: Guide for Ika dWallet on Solana pre-alpha - gRPC DWalletService, BCS request types, on-chain program (PDAs, approve_message, commit_dwallet, commit_signature), Pinocchio/Native/Anchor CPI SDKs, and @ika.xyz/pre-alpha-solana-client + @solana/kit. Use when integrating Solana ika, Solana dWallet, ika pre-alpha, dWallet Solana devnet, gRPC dWallet, DWalletHashScheme, hash_scheme on Sign, chunked DWallet PDA seeds, approve_message Solana, MessageApproval PDA, DWalletContext, @ika.xyz/pre-alpha-solana-client, ika-dwallet-pinocchio, ika-dwallet-native, ika-dwallet-anchor, or comparing Solana pre-alpha to Sui ika-sdk.
 ---
 
 # ika solana pre-alpha
@@ -24,8 +24,8 @@ Normative documentation: [solana pre-alpha docs](https://solana-pre-alpha.ika.xy
 | file | when to load it |
 | --- | --- |
 | [`references/docs-revision.md`](references/docs-revision.md) | Tracked **`docs/`** commit vs `ika-pre-alpha` `main`; if `docs/` changed, notify user—do not patch skill files; user may disable skill until updated |
-| [`references/grpc-api.md`](references/grpc-api.md) | `SubmitTransaction`, `UserSignedRequest`, BCS `DWalletRequest` / `SignedRequestData`, `ApprovalProof::Solana`, presign RPCs, enum wire values |
-| [`references/account-layouts.md`](references/account-layouts.md) | PDA seeds, byte offsets, rent helper, `MessageApproval` / `DWallet`, ika system accounts |
+| [`references/grpc-api.md`](references/grpc-api.md) | `SubmitTransaction`, `UserSignedRequest`, BCS `DWalletRequest` / `SignedRequestData`, mock **`hash_scheme`** rules, `ApprovalProof::Solana`, presign RPCs, enum wire values |
+| [`references/account-layouts.md`](references/account-layouts.md) | PDA seeds (chunked **DWallet** seeds), byte offsets, rent helper, `MessageApproval` / `DWallet`, ika system accounts |
 | [`references/instructions.md`](references/instructions.md) | Instruction discriminators, account metas, ix data; voting and multisig **example** programs |
 | [`references/events.md`](references/events.md) | Self-CPI event layout vs polling `MessageApproval` |
 | [`references/frameworks.md`](references/frameworks.md) | `DWalletContext`, framework choice, dependencies |
@@ -65,8 +65,9 @@ Devnet plus gRPC suffice for baseline integration without a local validator.
 ## wire quick pointers
 
 - On-chain **curve** byte: 0 Secp256k1, 1 Secp256r1, 2 Curve25519, 3 Ristretto ([`account-layouts.md`](references/account-layouts.md), [`grpc-api.md`](references/grpc-api.md)).
+- **DWallet PDA:** `["dwallet", 32-byte chunks of (curve \|\| pubkey)]` — not three fixed slices ([`account-layouts.md`](references/account-layouts.md)).
 - **`approve_message` signature_scheme:** 0 Ed25519, 1 Secp256k1, 2 Secp256r1 ([`instructions.md`](references/instructions.md)).
-- BCS enums and mock matrix: [`grpc-api.md`](references/grpc-api.md).
+- gRPC **`Sign` `hash_scheme`:** curve-specific; not ignored in mock ([`grpc-api.md`](references/grpc-api.md)).
 
 ## product flow (5 steps)
 
@@ -80,12 +81,12 @@ Devnet plus gRPC suffice for baseline integration without a local validator.
 
 1. Configure `@solana/kit` RPC, subscriptions, `sendAndConfirmTransactionFactory`; program id from environment table.
 2. DKG: build and sign `UserSignedRequest`, `SubmitTransaction`, handle `Attestation` ([`flows.md`](references/flows.md) flow 1, [`grpc-api.md`](references/grpc-api.md)).
-3. **`approve_message`:** 67-byte layout (disc `8`, bump, keccak256(message), user pubkey, scheme); PDA `["message_approval", dwallet, message_hash]`; direct-signer metas in [`instructions.md`](references/instructions.md).
-4. **`Sign`:** `ApprovalProof::Solana` from step 3 tx; fill `presign_id` and partial-signature fields per [`grpc-api.md`](references/grpc-api.md).
+3. **`approve_message`:** 67-byte layout (disc `8`, bump, **message_hash**, user pubkey, scheme); **`message_hash`** = `keccak256(preimage)` for the MessageApproval PDA (see **Convention** below); PDA `["message_approval", dwallet, message_hash]`; direct-signer metas in [`instructions.md`](references/instructions.md).
+4. **`Sign`:** `ApprovalProof::Solana` from step 3 tx; set **`hash_scheme`** per curve ([`grpc-api.md`](references/grpc-api.md)); fill `presign_id` and partial-signature fields; handle `TransactionResponseData::Error` if the scheme is wrong for the curve.
 5. Poll **MessageApproval** (offsets 139-142) or parse events ([`events.md`](references/events.md)).
 6. Presign via gRPC; query with `GetPresigns` / `GetPresignsForDWallet` ([`grpc-api.md`](references/grpc-api.md)).
 
-**Convention:** `message_hash` in PDAs and ix data is **keccak256** of the message preimage (pre-alpha).
+**Convention:** **`message_hash`** in `approve_message` ix data and MessageApproval PDA seeds is **always** **`keccak256(preimage)`** — the on-chain uniqueness key. The **digest the network signs** on gRPC **`Sign`** is separate: chosen via **`hash_scheme`** on the request (see [`grpc-api.md`](references/grpc-api.md)).
 
 ## procedure: on-chain CPI (pattern)
 
@@ -131,7 +132,7 @@ Selection matrix and crate setup: [`frameworks.md`](references/frameworks.md). R
 | mutation path | PTB + `IkaClient` | Solana transactions + gRPC `SubmitTransaction` |
 | on-chain shape | Objects | PDAs + fixed layouts |
 | approval link | Sui effects | `ApprovalProof::Solana { tx sig, slot }` |
-| `message_hash` | chain-defined | keccak256 (pre-alpha convention) |
+| `message_hash` | chain-defined | Solana: always **keccak256(preimage)** for PDA + ix; **Sign** digest is **`hash_scheme`**-dependent ([`grpc-api.md`](references/grpc-api.md)) |
 
 BCS and lifecycle detail: [`grpc-api.md`](references/grpc-api.md), [`flows.md`](references/flows.md).
 

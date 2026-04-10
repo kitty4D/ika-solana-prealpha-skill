@@ -20,7 +20,7 @@ Install: [`../SKILL.md`](../SKILL.md). Typical Solana Kit entrypoints: `createSo
 
 ### approve_message (direct authority)
 
-Derive MessageApproval PDA with seeds `message_approval`, encoded dwallet address, `message_hash` (32 bytes). Instruction data: 67 bytes per [`instructions.md`](instructions.md).
+Derive **DWallet** PDA with chunked seeds per [`account-layouts.md`](account-layouts.md) (not a single `[curve, pk]` pair). Derive MessageApproval PDA with seeds `message_approval`, encoded dwallet address, `message_hash` (32 bytes). Instruction data: 67 bytes per [`instructions.md`](instructions.md).
 
 ```typescript
 import { address, getAddressEncoder, getProgramDerivedAddress, getUtf8Encoder } from "@solana/kit";

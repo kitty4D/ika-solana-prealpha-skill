@@ -6,10 +6,10 @@ Published book: [solana pre-alpha docs](https://solana-pre-alpha.ika.xyz/) is bu
 
 | field | value |
 | --- | --- |
-| commit (full) | `4fe19db6e95748477537241bb2e4de4832351ee4` |
-| commit (short) | `4fe19db` |
-| upstream commit date (UTC) | 2026-04-07 |
-| recorded in skill | 2026-04-07 |
+| commit (full) | `40ba20db9da903ef27bd6a8d15c06de48c4c8c55` |
+| commit (short) | `40ba20d` |
+| upstream commit date (UTC) | 2026-04-08 |
+| recorded in skill | 2026-04-08 |
 
 **Interpretation:** This skill’s prose and book-derived summaries were last aligned with the **`docs/`** tree at that commit. **Only** changes under `docs/` in `ika-pre-alpha` matter when deciding whether this skill’s documentation excerpts may be stale (ignore unrelated program, proto, or crate churn unless the maintainer also updates this bundle).
 
