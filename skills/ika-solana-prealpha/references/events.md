@@ -30,7 +30,7 @@ Emitted when **approve_message** initializes a MessageApproval.
 | field | size |
 | --- | --- |
 | dwallet | 32 |
-| message_hash | 32 |
+| message_digest | 32 |
 | caller_program | 32 |
 
 ---
@@ -48,13 +48,13 @@ Emitted when the NOA executes **commit_signature**.
 
 ## DWalletCreated
 
-Emitted when **commit_dwallet** creates a dWallet.
+Emitted when **CommitDWallet** creates a dWallet.
 
 | field | size |
 | --- | --- |
 | dwallet | 32 |
 | authority | 32 |
-| curve | 1 |
+| curve | 2 (u16 LE) or per program IDL |
 
 ---
 
@@ -114,7 +114,7 @@ function parseDwalletEvents(inner: { programId: string; data: Uint8Array }[]) {
 
 ## Polling vs events
 
-Poll **MessageApproval** `status` at offset **139**; signature length **140** (LE u16); signature **142**.
+Poll **MessageApproval** `status` at offset **172**; signature length **173–174** (LE u16); signature starts **175**.
 
 | approach | pros | cons |
 | --- | --- | --- |

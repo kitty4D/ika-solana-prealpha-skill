@@ -1,53 +1,36 @@
 ---
 name: ika-solana-prealpha
-description: Guide for Ika dWallet on Solana pre-alpha - gRPC DWalletService, BCS request types, on-chain program (PDAs, approve_message, commit_dwallet, commit_signature), Pinocchio/Native/Anchor CPI SDKs, and @ika.xyz/pre-alpha-solana-client + @solana/kit. Use when integrating Solana ika, Solana dWallet, ika pre-alpha, dWallet Solana devnet, gRPC dWallet, DWalletHashScheme, hash_scheme on Sign, chunked DWallet PDA seeds, approve_message Solana, MessageApproval PDA, DWalletContext, @ika.xyz/pre-alpha-solana-client, ika-dwallet-pinocchio, ika-dwallet-native, ika-dwallet-anchor, or comparing Solana pre-alpha to Sui ika-sdk.
+description: Use when working with ika dWallet on Solana pre-alpha (devnet, mock signer), gRPC DWalletService SubmitTransaction, BCS SignedRequestData and DWalletRequest, NetworkSignedAttestation, versioned attestations, DWalletSignatureScheme, message_metadata, ApproveMessage, MessageApproval PDAs, CommitDWallet, CommitSignature, DWalletContext CPI (Pinocchio, native, Anchor, Quasar), @ika.xyz/pre-alpha-solana-client, @solana/kit, ika-dwallet-types, chunked dwallet seeds, chains/solana/examples, protocols-e2e, e2e-protocols, or comparing this stack to Sui ika-sdk. Call with audit or audit-force for drift and client dependency checks.
 ---
 
 # ika solana pre-alpha
 
-Normative documentation: [solana pre-alpha docs](https://solana-pre-alpha.ika.xyz/) (mdbook sources live in [dwallet-labs/ika-pre-alpha](https://github.com/dwallet-labs/ika-pre-alpha), `docs/`). This skill summarizes workflows; load `references/` for BCS, layouts, and instruction tables.
+Normative book: [solana pre-alpha docs](https://solana-pre-alpha.ika.xyz/) — sources: [`ika-pre-alpha` `docs/`](https://github.com/dwallet-labs/ika-pre-alpha). **Details live in [`references/`](references/)**; this file is the hub only.
 
-**Docs revision:** [`references/docs-revision.md`](references/docs-revision.md) records the **git commit** this skill was aligned against for **`docs/`** only. If the mdbook sources on `main` have changed since that commit (see that file), **notify the human user** that ika-pre-alpha docs have moved ahead, this skill may be outdated, and they may wish to **disable this skill** until they obtain an updated bundle or re-verify against the live book.
+**Stale check:** [`references/docs-revision.md`](references/docs-revision.md) — if `docs/` on `main` is past the tracked commit, **tell the user**; do not silently rewrite the bundle.
+
+**Maintainer / integration audit:** `/ika-solana-prealpha audit` (hard stop if skill docs pin is stale) or `/ika-solana-prealpha audit-force` (same checks, but continues after printing a stale warning). Run `node skills/ika-solana-prealpha/scripts/audit-ika-solana-prealpha.mjs` from the **ika-solana-prealpha-skill** repo root, or `node scripts/audit-ika-solana-prealpha.mjs` with cwd set to this skill folder; optional `--root=<path>` for the project to scan (default `process.cwd()`); add `--force` to match audit-force.
 
 ## pre-alpha disclaimer (non-negotiable)
 
-- Solana pre-alpha is for **SDK exploration and dev only**.
-- **No real MPC** — a **single mock signer**, not a distributed network.
-- **Do not submit real-value (mainnet / production) transactions for signing** or rely on security guarantees. Keys, trust model, and protocol are **not final**; **do not rely on key material** until mainnet.
-- **Devnet resets** - state and interfaces may change without notice.
-- **No warranty** - use at your own risk.
-
-**Pass-through:** When exposing pre-alpha flows to end users, customers, or the public, do not present the stack as production MPC or stable custody. Surface the limitations above (mock signer, no security guarantees, devnet instability, non-final keys) proportionally—in copy, docs, or in-app notices. Internal-only environments where the stack is already understood need not belabor this.
+**SDK / dev only** — not production MPC. **Mock signer** (not distributed); **no real-value signing**; keys and protocol **not final**. **Devnet resets**; **no warranty**. Do not sell this as production custody to end users; surface limits where exposure warrants.
 
 ## references (load on demand)
 
-| file | when to load it |
+| file | when |
 | --- | --- |
-| [`references/docs-revision.md`](references/docs-revision.md) | Tracked **`docs/`** commit vs `ika-pre-alpha` `main`; if `docs/` changed, notify user—do not patch skill files; user may disable skill until updated |
-| [`references/grpc-api.md`](references/grpc-api.md) | `SubmitTransaction`, `UserSignedRequest`, BCS `DWalletRequest` / `SignedRequestData`, mock **`hash_scheme`** rules, `ApprovalProof::Solana`, presign RPCs, enum wire values |
-| [`references/account-layouts.md`](references/account-layouts.md) | PDA seeds (chunked **DWallet** seeds), byte offsets, rent helper, `MessageApproval` / `DWallet`, ika system accounts |
-| [`references/instructions.md`](references/instructions.md) | Instruction discriminators, account metas, ix data; voting and multisig **example** programs |
-| [`references/events.md`](references/events.md) | Self-CPI event layout vs polling `MessageApproval` |
-| [`references/frameworks.md`](references/frameworks.md) | `DWalletContext`, framework choice, dependencies |
-| [`references/flows.md`](references/flows.md) | Ordered DKG, sign, CPI, presign, authority, verification, demo lifecycles |
+| [`docs-revision.md`](references/docs-revision.md) | Tracked `docs/` commit vs `main` |
+| [`grpc-api.md`](references/grpc-api.md) | SubmitTransaction, BCS types, mock matrix, **`Attestation`** |
+| [`account-layouts.md`](references/account-layouts.md) | PDA seeds, offsets |
+| [`instructions.md`](references/instructions.md) | Discriminators, metas, ix data |
+| [`events.md`](references/events.md) | Events vs polling `MessageApproval` |
+| [`frameworks.md`](references/frameworks.md) | `DWalletContext`, crates, CPI |
+| [`flows.md`](references/flows.md) | Ordered DKG → sign → CPI → verify |
+| [`examples.md`](references/examples.md) | Upstream `chains/solana/examples`: voting, multisig, `protocols-e2e`, `_shared` |
 
 ## install
 
-**TypeScript**
-
-```bash
-pnpm add @ika.xyz/pre-alpha-solana-client @solana/kit
-```
-
-**Rust (on-chain CPI)** - `ika-dwallet-*` crates from git (**source repo** row in the table below):
-
-- Pinocchio: `ika-dwallet-pinocchio` + `pinocchio` + `pinocchio-system`
-- Native: `ika-dwallet-native` + `solana-program`
-- Anchor v1: `ika-dwallet-anchor` + `anchor-lang = "1"` (Anchor CLI 1.x, Solana CLI 3.x+)
-
-**Rust (gRPC)** - `ika-grpc`, `ika-dwallet-types`, `tokio` with `rt-multi-thread`, `macros`. The sample in [`references/grpc-api.md`](references/grpc-api.md) expects `DWALLET_GRPC_URL` set to the **dWallet gRPC** value above.
-
-**Account types** - `ika-solana-sdk-types` (published name may appear as `ika-sdk-types` in docs)
+**TypeScript:** `pnpm add @ika.xyz/pre-alpha-solana-client @solana/kit` — **Rust CPI / gRPC:** [`frameworks.md`](references/frameworks.md), sample in [`grpc-api.md`](references/grpc-api.md). **Account helpers:** `ika-solana-sdk-types` (sometimes `ika-sdk-types` in prose).
 
 ## environment (pre-alpha)
 
@@ -58,84 +41,52 @@ pnpm add @ika.xyz/pre-alpha-solana-client @solana/kit
 | dWallet program id | `87W54kGYFQ1rgWqMeu4XTPHWXWmXSQCcjm8vCTfiq1oY` |
 | source repo | `https://github.com/dwallet-labs/ika-pre-alpha` |
 
-**Canonical values:** Treat this table as the single source for program id, gRPC URL, default Solana RPC, and ika `git` remote. Other files link here; literals inside code samples are for copy-paste and must stay aligned with this table.
+**Canonical:** program id, gRPC URL, default RPC, git remote — **only here**; samples elsewhere must match.
 
-Devnet plus gRPC suffice for baseline integration without a local validator.
+## on-chain instruction names vs Rust CPI
 
-## wire quick pointers
+The **program** and **book** use PascalCase instruction names with discriminators — e.g. **`ApproveMessage`** (8), **`TransferOwnership`** (24), **`CommitDWallet`** (31), **`CommitSignature`** (43). Full table: [`instructions.md`](references/instructions.md). **Rust SDK** methods on `DWalletContext` are snake_case (`approve_message`, …) and wrap those instructions — see [`frameworks.md`](references/frameworks.md).
 
-- On-chain **curve** byte: 0 Secp256k1, 1 Secp256r1, 2 Curve25519, 3 Ristretto ([`account-layouts.md`](references/account-layouts.md), [`grpc-api.md`](references/grpc-api.md)).
-- **DWallet PDA:** `["dwallet", 32-byte chunks of (curve \|\| pubkey)]` — not three fixed slices ([`account-layouts.md`](references/account-layouts.md)).
-- **`approve_message` signature_scheme:** 0 Ed25519, 1 Secp256k1, 2 Secp256r1 ([`instructions.md`](references/instructions.md)).
-- gRPC **`Sign` `hash_scheme`:** curve-specific; not ignored in mock ([`grpc-api.md`](references/grpc-api.md)).
+## wire (one minute)
 
-## product flow (5 steps)
+- **DWallet** PDA: chunk **(curve u16 LE ‖ pubkey bytes)** per [`account-layouts.md`](references/account-layouts.md) — not legacy single-byte curve.
+- **MessageApproval** PDA: seeds include **`scheme_u16_le`**, **`message_digest`**, optional **`message_metadata_digest`** — not a flat `[message_approval, dwallet, message_hash]` triple.
+- **Signing:** scheme from on-chain **`MessageApproval.signature_scheme`** (`DWalletSignatureScheme`) plus **`message` / `message_metadata`** on gRPC — [`grpc-api.md`](references/grpc-api.md).
 
-1. DKG over gRPC; NOA **`commit_dwallet`** ([`instructions.md`](references/instructions.md)).
-2. **`transfer_ownership`** to CPI PDA or retain user authority as designed.
-3. **`approve_message`** creates **MessageApproval** (CPI or direct signer).
-4. Signing completes via NOA **`commit_signature`** and/or gRPC **`Signature`** response.
-5. Read **MessageApproval** status and signature bytes ([`account-layouts.md`](references/account-layouts.md)).
+## core convention
 
-## procedure: TypeScript off-chain (direct signer)
+**`message_digest`** / PDA keys: **Keccak-256** of the message (and metadata digest in seeds when non-zero). How the network signs follows **`DWalletSignatureScheme`** — [`grpc-api.md`](references/grpc-api.md), [`flows.md`](references/flows.md) flow 6.
 
-1. Configure `@solana/kit` RPC, subscriptions, `sendAndConfirmTransactionFactory`; program id from environment table.
-2. DKG: build and sign `UserSignedRequest`, `SubmitTransaction`, handle `Attestation` ([`flows.md`](references/flows.md) flow 1, [`grpc-api.md`](references/grpc-api.md)).
-3. **`approve_message`:** 67-byte layout (disc `8`, bump, **message_hash**, user pubkey, scheme); **`message_hash`** = `keccak256(preimage)` for the MessageApproval PDA (see **Convention** below); PDA `["message_approval", dwallet, message_hash]`; direct-signer metas in [`instructions.md`](references/instructions.md).
-4. **`Sign`:** `ApprovalProof::Solana` from step 3 tx; set **`hash_scheme`** per curve ([`grpc-api.md`](references/grpc-api.md)); fill `presign_id` and partial-signature fields; handle `TransactionResponseData::Error` if the scheme is wrong for the curve.
-5. Poll **MessageApproval** (offsets 139-142) or parse events ([`events.md`](references/events.md)).
-6. Presign via gRPC; query with `GetPresigns` / `GetPresignsForDWallet` ([`grpc-api.md`](references/grpc-api.md)).
+## workflows
 
-**Convention:** **`message_hash`** in `approve_message` ix data and MessageApproval PDA seeds is **always** **`keccak256(preimage)`** — the on-chain uniqueness key. The **digest the network signs** on gRPC **`Sign`** is separate: chosen via **`hash_scheme`** on the request (see [`grpc-api.md`](references/grpc-api.md)).
+**Rough order:** DKG attestation → **`CommitDWallet`** (NOA) → optional **`TransferOwnership`** → **`ApproveMessage`** → gRPC **`Sign`** → **`CommitSignature`** (NOA) / read **`MessageApproval`**. Detail: [`flows.md`](references/flows.md).
 
-## procedure: on-chain CPI (pattern)
+## Audit mode
 
-```rust
-let ctx = DWalletContext {
-    dwallet_program: &dwallet_program_account,
-    cpi_authority: &cpi_authority_account,
-    caller_program: &my_program_account,
-    cpi_authority_bump: bump,
-};
-ctx.approve_message(
-    message_approval,
-    dwallet,
-    payer,
-    system_program,
-    message_hash,
-    user_pubkey,
-    signature_scheme,
-    message_approval_bump,
-)?;
-```
+If this skill is invoked with **`audit`** (e.g. `/ika-solana-prealpha audit`), treat it as a **repo + client integration audit** of the **user’s project** (workspace / `--root`), not a rewrite of this skill.
 
-CPI path adds **caller_program** and **cpi_authority** ([`instructions.md`](references/instructions.md), [`frameworks.md`](references/frameworks.md)).
+1. **Gate — skill freshness:** Read [`references/docs-revision.md`](references/docs-revision.md). If `docs/` on `ika-pre-alpha` `main` has changed since the tracked commit (same test as that file: GitHub compare `...main` restricted to `docs/`, or local `git diff <tracked>..origin/main -- docs`), **stop** after reporting: pinned commit, that book sources may be stale, link to compare, and the rule *do not silently rewrite this bundle*. **Do not** run dependency scans or semantic audit on the user repo until this gate passes (or the user uses **audit-force**).
+2. **Deterministic checks:** From the ika-solana-prealpha-skill repo root, run `node skills/ika-solana-prealpha/scripts/audit-ika-solana-prealpha.mjs --root=<user project>` (no `--force`), or the same path relative to the skill directory’s `scripts/` folder. Paste stdout/stderr; honor non-zero exit as **blocked** when the script reports doc drift. That script also compares **locked** `@ika.xyz/pre-alpha-solana-client` and `@solana/kit` versions to npm **`latest`** when it finds a `package-lock.json`, `pnpm-lock.yaml`, or `yarn.lock` (walking up to the monorepo root).
+3. **Semantic checklist (user code):** With [`flows.md`](references/flows.md), [`grpc-api.md`](references/grpc-api.md), and [`account-layouts.md`](references/account-layouts.md), trace **`Sign` / `SubmitTransaction`**, **`ApproveMessage` / CPI**, **MessageApproval** reads, and **flow 6** verification; cite **file:line**. Note gaps; do not invent upstream APIs.
 
-## instruction discriminators (dWallet program, byte 0)
+## Audit-force mode
 
-Canonical table: [`instructions.md`](references/instructions.md).
+If invoked with **`audit-force`** (e.g. `/ika-solana-prealpha audit-force`), perform the **same** steps as **Audit mode**, except:
 
-Frequent path: `8` approve_message, `24` transfer_ownership, `31` commit_dwallet, `42` transfer_future_sign, `43` commit_signature. Additional: `33`-`38`, `44`-`46` (confirm in source if undocumented in book).
+1. **Still compute and print** whether `docs/` is stale (commit, compare link, warning that the skill may be wrong for new book prose).
+2. **Then continue** even if stale: run `node skills/ika-solana-prealpha/scripts/audit-ika-solana-prealpha.mjs --force --root=<user project>` (or `node scripts/audit-ika-solana-prealpha.mjs` from the skill folder) and complete the semantic checklist. The human must see the stale warning **before** downstream “all clear” language.
 
-## PDA seeds
+## common mistakes
 
-Definitions: [`account-layouts.md`](references/account-layouts.md) (coordinator, NEK, dwallet, message_approval, CPI authority `["__ika_cpi_authority"]` under **your** program id, optional gas deposit).
+| mistake | what to do instead |
+| --- | --- |
+| Wrong **MessageApproval** or **DWallet** PDAs | [`account-layouts.md`](references/account-layouts.md): MessageApproval seeds include **`scheme_u16_le`**, **`message_digest`**, optional **`message_metadata_digest`**; DWallet chunks use **curve u16 LE ‖ pubkey**. |
+| Verify from PDA **`message_digest`** only | Use **`DWalletSignatureScheme`** + **`message` / `message_metadata`** like the validator — [`flows.md`](references/flows.md) flow 6, [`grpc-api.md`](references/grpc-api.md). |
+| **gRPC** trust | Mock **`Sign`** often **`Error`**; HTTP **200** can still wrap **`TransactionResponseData::Error`** — deserialize — [`grpc-api.md`](references/grpc-api.md). |
+| **`docs/`** moved upstream | [`docs-revision.md`](references/docs-revision.md): tell the user; do not silently patch this bundle. |
 
-## frameworks
+**vs Sui `ika-sdk`:** Sui uses PTB + `IkaClient`, objects, effects certs; Solana pre-alpha uses Solana txs + gRPC **`SubmitTransaction`**, PDAs, **`ApprovalProof::Solana`**. BCS and lifecycles: [`grpc-api.md`](references/grpc-api.md), [`flows.md`](references/flows.md).
 
-Selection matrix and crate setup: [`frameworks.md`](references/frameworks.md). Rust CPI crates are mutually compatible on seeds, discriminators, and layouts.
+## related (optional)
 
-## contrast with Sui `ika-sdk`
-
-| topic | Sui (`@ika.xyz/sdk`) | Solana pre-alpha |
-| --- | --- | --- |
-| mutation path | PTB + `IkaClient` | Solana transactions + gRPC `SubmitTransaction` |
-| on-chain shape | Objects | PDAs + fixed layouts |
-| approval link | Sui effects | `ApprovalProof::Solana { tx sig, slot }` |
-| `message_hash` | chain-defined | Solana: always **keccak256(preimage)** for PDA + ix; **Sign** digest is **`hash_scheme`**-dependent ([`grpc-api.md`](references/grpc-api.md)) |
-
-BCS and lifecycle detail: [`grpc-api.md`](references/grpc-api.md), [`flows.md`](references/flows.md).
-
-## related material (optional)
-
-If present in your skills or docs tree, use generic Solana and wallet-architecture references alongside this skill for non-ika client patterns.
+Generic Solana / wallet docs for non-ika plumbing as needed.

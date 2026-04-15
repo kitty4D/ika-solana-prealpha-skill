@@ -27,9 +27,25 @@ this repo only targets solana pre-alpha integration (devnet, mock signer, gRPC, 
 
 | path | contents |
 | --- | --- |
-| `skills/ika-solana-prealpha/` | `SKILL.md` + `references/` (including [`references/docs-revision.md`](skills/ika-solana-prealpha/references/docs-revision.md)). |
+| `skills/ika-solana-prealpha/` | `SKILL.md` hub |
+| `skills/ika-solana-prealpha/references/` | deep refs: gRPC, flows, PDAs, instructions, events, frameworks, [`docs-revision.md`](skills/ika-solana-prealpha/references/docs-revision.md), [`examples.md`](skills/ika-solana-prealpha/references/examples.md) (upstream `chains/solana/examples` index) |
+| `skills/ika-solana-prealpha/scripts/` | [`audit-ika-solana-prealpha.mjs`](skills/ika-solana-prealpha/scripts/audit-ika-solana-prealpha.mjs) — optional drift + dependency / canonical-string checks (node stdlib) |
 
 [`docs-revision.md`](skills/ika-solana-prealpha/references/docs-revision.md) records which **`docs/`** commit in [ika-pre-alpha](https://github.com/dwallet-labs/ika-pre-alpha) this bundle was last aligned with. if **`docs/`** on `main` has changed since then, the hosted book may be ahead of what’s here—when in doubt, trust the live [solana pre-alpha docs](https://solana-pre-alpha.ika.xyz/) or an updated copy of this repo from me, kitty4d. if you use this as an editor skill and the summary feels wrong, you can turn the skill off until you’re happy with a fresher version.
+
+### audit your codebase for issues related to ika-solana-prealpha
+
+use commands **`/ika-solana-prealpha audit`** and **`/ika-solana-prealpha audit-force`** (trailing tokens on the skill slash). **audit** stops if the skill’s doc pin is stale vs upstream `docs/`; **audit-force** still prints that warning then continues.
+
+from the **repo root** of this clone:
+
+```bash
+node skills/ika-solana-prealpha/scripts/audit-ika-solana-prealpha.mjs --root=/path/to/your/app
+```
+
+add `--force` for audit-force behavior. if you only copied the skill folder, `cd` into `ika-solana-prealpha` and run `node scripts/audit-ika-solana-prealpha.mjs` the same way. details: [`SKILL.md`](skills/ika-solana-prealpha/SKILL.md) (audit mode sections).
+
+the script also hits the **npm registry** `latest` tag for `@ika.xyz/pre-alpha-solana-client` and `@solana/kit` when it can read a resolved version from `package-lock.json`, `pnpm-lock.yaml`, or `yarn.lock` (including a lockfile a few directories up in a monorepo). it uses a small semver compare (stdlib only)—not a full npm arborist solve.
 
 
 ## ika on sui (mainnet)
@@ -38,7 +54,7 @@ ika on **sui** is on **mainnet**. dWallet Labs ships **official** agent skills f
 
 ## install
 
-in this repo the skill lives under **`skills/ika-solana-prealpha/`** (a common **skill package** layout so installers can find it). inside that folder: `SKILL.md` at the skill root and `references/` beside it.
+in this repo the skill lives under **`skills/ika-solana-prealpha/`** (a common **skill package** layout so installers can find it). inside that folder: `SKILL.md` at the skill root, `references/` beside it, and `scripts/` next to both (keep that layout when copying).
 
 ### `npx skills` ([skills.sh](https://skills.sh/) / Vercel CLI)
 
@@ -60,11 +76,11 @@ add `-g` for a global (user-wide) install when supported. see [skills.sh CLI doc
 
 ### cursor
 
-use [cursor agent skills](https://cursor.com/docs/context/skills): copy **`skills/ika-solana-prealpha/`** into your project or user skills location (so the installed folder is still named `ika-solana-prealpha` and matches the skill `name` in frontmatter), or point the tool at that path.
+use [cursor agent skills](https://cursor.com/docs/context/skills): copy **`skills/ika-solana-prealpha/`** into your project or user skills location (so the installed folder is still named `ika-solana-prealpha` and matches the skill `name` in frontmatter), or point the tool at that path. keep `references/` + `scripts/` next to `SKILL.md` so relative links and the audit script paths stay valid.
 
 ### claude code
 
-claude code expects each skill as a directory containing `SKILL.md` (often `~/.claude/skills/<skill-name>/` or `.claude/skills/<skill-name>/` in a project). copy **`skills/ika-solana-prealpha/`** from this repo to `.../skills/ika-solana-prealpha/` so `SKILL.md` and `references/` stay siblings. if your app version uses a different path, follow its docs as long as the layout is preserved.
+claude code expects each skill as a directory containing `SKILL.md` (often `~/.claude/skills/<skill-name>/` or `.claude/skills/<skill-name>/` in a project). copy **`skills/ika-solana-prealpha/`** from this repo to `.../skills/ika-solana-prealpha/` so `SKILL.md`, `references/`, and `scripts/` stay siblings. if your app version uses a different path, follow its docs as long as the layout is preserved.
 
 ### other assistants
 
@@ -76,7 +92,7 @@ anything that can ingest a markdown skill manifest plus linked reference files t
 
 ## scope (quick)
 
-gRPC `DWalletService`, BCS shapes, devnet program id + RPC table inside `SKILL.md`, instruction discriminators, PDA layouts, Pinocchio / native / Anchor CPI crates, TS clients (`@ika.xyz/pre-alpha-solana-client`, `@solana/kit`). pre-alpha only: mock signer, devnet resets, not production MPC.
+gRPC `DWalletService`, BCS shapes, devnet program id + RPC table inside `SKILL.md`, instruction discriminators, PDA layouts, Pinocchio / native / Anchor / Quasar CPI crates, TS clients (`@ika.xyz/pre-alpha-solana-client`, `@solana/kit`), upstream example app paths under `chains/solana/examples` (see `references/examples.md`). pre-alpha only: mock signer, devnet resets, not production MPC.
 
 > *gets ready with a cute label-maker and nervous energy*  
 > CC-BY-chan isn't trying to ruin the mood- she wants names, links, and n-no "dWallet Labs hand-delivered this readme" cosplay ok?  

@@ -2,107 +2,132 @@
 
 ## table of contents
 
-1. dWallet program (groups, full discriminator table)
-2. approve_message, transfer_ownership, commit_dwallet, transfer_future_sign, commit_signature
+1. dWallet program (full discriminator table)
+2. approve_message, transfer_ownership, CommitDWallet, TransferFutureSign, CommitSignature
 3. Voting example program (create_proposal, cast_vote)
 4. Multisig example program
 
 Byte **0** of dWallet program instruction data is the **discriminator**.
 
-**Program id:** [`../SKILL.md`](../SKILL.md) environment table (dWallet program id).
+**Program id:** [`../SKILL.md`](../SKILL.md) environment table.
+
+**Normative:** upstream [`docs/src/reference/accounts.md`](https://github.com/dwallet-labs/ika-pre-alpha/blob/main/docs/src/reference/accounts.md) and [`docs/src/on-chain/message-approval.md`](https://github.com/dwallet-labs/ika-pre-alpha/blob/main/docs/src/on-chain/message-approval.md) at the commit in [`docs-revision.md`](docs-revision.md).
 
 ---
 
-## dWallet program - groups
+## dWallet program — full discriminator table
 
-| group | discriminators | instructions |
-| --- | --- | --- |
-| Message | 8 | approve_message |
-| Ownership | 24 | transfer_ownership |
-| DKG | 31 | commit_dwallet |
-| Extended | 33-38 | future sign, share commits, gas helpers |
-| Signing | 42-43 | transfer_future_sign, commit_signature |
-| Withdraw / init | 44-46 | RequestWithdraw, Withdraw, Initialize |
-
-### full discriminator table
-
-| disc | name |
+| disc | instruction |
 | --- | --- |
-| 8 | approve_message |
-| 24 | transfer_ownership |
-| 31 | commit_dwallet |
+| 0 | CreateDKGRequest |
+| 1 | CompleteDKGFirstRound |
+| 2 | SubmitUserDKGVerification |
+| 3 | CompleteDKG |
+| 4 | RejectDKG |
+| 5 | CreateImportedKeyDKGRequest |
+| 6 | CompleteImportedKeyVerification |
+| 7 | RejectImportedKeyVerification |
+| 8 | ApproveMessage |
+| 11 | CreatePresignRequest |
+| 12 | CompletePresign |
+| 13 | RejectPresign |
+| 14 | CreatePartialUserSignature |
+| 15 | VerifyPartialUserSignature |
+| 16 | RejectPartialUserSignature |
+| 17 | CreateEncryptionKey |
+| 18 | CreateEncryptedShare |
+| 19 | VerifyEncryptedShare |
+| 20 | RejectEncryptedShare |
+| 21 | AcceptEncryptedShare |
+| 22 | MakeUserSecretKeySharePublic |
+| 23 | VerifyMakePublic |
+| 24 | TransferOwnership |
+| 25 | CreateSigningDelegation |
+| 26 | CloseSigningDelegation |
+| 27 | RequestNetworkDKG |
+| 28 | CommitNetworkDKG |
+| 29 | RequestNetworkKeyReconfiguration |
+| 30 | CommitNetworkKeyReconfiguration |
+| 31 | CommitDWallet |
 | 33 | CommitFutureSign |
 | 34 | CommitEncryptedUserSecretKeyShare |
 | 35 | CommitPublicUserSecretKeyShare |
 | 36 | CreateDeposit |
 | 37 | TopUp |
 | 38 | SettleGas |
-| 42 | transfer_future_sign |
-| 43 | commit_signature |
+| 39 | UpdateFees |
+| 40 | PauseCurve |
+| 41 | UnpauseCurve |
+| 42 | TransferFutureSign |
+| 43 | CommitSignature |
 | 44 | RequestWithdraw |
 | 45 | Withdraw |
 | 46 | Initialize |
+| 228 | EmitEvent |
 
-Instruction data for discriminators **33-38** and **44-46** is not fully documented in the public book; read the **source repo** in [`../SKILL.md`](../SKILL.md) for layouts.
+Layouts for DKG / presign / share / gas instructions **not** spelled out here — read **`ika-pre-alpha`** program sources or book chapters at the tracked revision.
 
 ---
 
 ## approve_message (disc 8)
 
-Creates **MessageApproval** PDA. **`message_hash`:** **opaque 32-byte uniqueness key** for the PDA — must be **`keccak256(preimage)`** regardless of destination chain. Independent of gRPC **`Sign`** `hash_scheme` (which controls the digest actually signed). Same rule as [`../SKILL.md`](../SKILL.md).
+Creates **MessageApproval** PDA. **`message_digest`** = **keccak256(message)** (32 bytes). **`message_metadata_digest`** = **keccak256(message_metadata_bytes)** or **zeros** if no metadata. **`signature_scheme`** = **`DWalletSignatureScheme`** as **u16 LE** (0–6).
 
-### data - 67 bytes
+### data — 100 bytes
 
 | offset | field | size |
 | --- | --- | --- |
 | 0 | discriminator | 1 (`8`) |
 | 1 | bump | 1 |
-| 2 | message_hash | 32 |
-| 34 | user_pubkey | 32 |
-| 66 | signature_scheme | 1 (0 Ed25519, 1 Secp256k1, 2 Secp256r1) |
+| 2 | message_digest | 32 |
+| 34 | message_metadata_digest | 32 |
+| 66 | user_pubkey | 32 |
+| 98 | signature_scheme | 2 (LE u16) |
 
-### accounts - CPI path (6 metas)
+### accounts — CPI path (7 metas)
 
 | # | account | writable | signer | notes |
 | --- | --- | --- | --- | --- |
-| 0 | message_approval | yes | no | empty PDA |
-| 1 | dwallet | no | no | |
-| 2 | caller_program | no | no | executable |
-| 3 | cpi_authority | no | yes | PDA `["__ika_cpi_authority"]` for caller |
-| 4 | payer | yes | yes | rent |
-| 5 | system_program | no | no | |
+| 0 | coordinator | no | no | DWalletCoordinator PDA (epoch) |
+| 1 | message_approval | yes | no | empty PDA to create |
+| 2 | dwallet | no | no | |
+| 3 | caller_program | no | no | executable |
+| 4 | cpi_authority | no | yes | PDA `["__ika_cpi_authority"]` |
+| 5 | payer | yes | yes | rent |
+| 6 | system_program | no | no | |
 
 **Checks:** `cpi_authority == PDA(["__ika_cpi_authority"], caller_program)` and `dwallet.authority == cpi_authority`.
 
-### accounts - direct signer path (5 metas)
+### accounts — direct signer path (6 metas)
 
 | # | account | writable | signer |
 | --- | --- | --- | --- |
-| 0 | message_approval | yes | no |
-| 1 | dwallet | no | no |
-| 2 | authority | no | yes |
-| 3 | payer | yes | yes |
-| 4 | system_program | no | no |
+| 0 | coordinator | no | no |
+| 1 | message_approval | yes | no |
+| 2 | dwallet | no | no |
+| 3 | authority | no | yes |
+| 4 | payer | yes | yes |
+| 5 | system_program | no | no |
 
 ---
 
 ## transfer_ownership (disc 24)
 
-### data - 33 bytes
+### data — 33 bytes
 
 | offset | field | size |
 | --- | --- | --- |
 | 0 | discriminator | 1 (`24`) |
 | 1 | new_authority | 32 |
 
-### accounts - signer path
+### accounts — signer path
 
 | # | account | writable | signer |
 | --- | --- | --- | --- |
 | 0 | current_authority | no | yes |
 | 1 | dwallet | yes | no |
 
-### accounts - CPI path
+### accounts — CPI path
 
 | # | account | writable | signer |
 | --- | --- | --- | --- |
@@ -112,39 +137,13 @@ Creates **MessageApproval** PDA. **`message_hash`:** **opaque 32-byte uniqueness
 
 ---
 
-## commit_dwallet (disc 31) - NOA only
+## CommitDWallet (disc 31) — NOA only
 
-Creates **DWallet** PDA after DKG attestation.
-
-### accounts
-
-| # | account | writable | signer |
-| --- | --- | --- | --- |
-| 0 | coordinator | no | no |
-| 1 | nek | no | no |
-| 2 | noa | no | yes |
-| 3 | dwallet | yes | no |
-| 4 | authority | no | no |
-| 5 | payer | yes | yes |
-| 6 | system_program | no | no |
-
-### data (from book)
-
-| offset | field | size |
-| --- | --- | --- |
-| 0 | discriminator | 1 |
-| 1 | curve | 1 |
-| 2 | is_imported | 1 |
-| 3 | public_key_len | 1 |
-| 4 | public_key | 65 |
-| 69 | bump | 1 |
-| 70 | public_output_len | 2 (LE u16) |
-| 72 | public_output | 256 |
-| 328 | noa_signature | 64 |
+Commits DKG / imported-key verification attestation; creates **DWallet** (+ **DWalletAttestation** per upstream). Exact **`data` / accounts`** — see book and program sources.
 
 ---
 
-## transfer_future_sign (disc 42) - CPI path
+## TransferFutureSign (disc 42) — CPI path
 
 ### accounts
 
@@ -154,7 +153,7 @@ Creates **DWallet** PDA after DKG attestation.
 | 1 | caller_program | no | no |
 | 2 | cpi_authority | no | yes |
 
-### data - 33 bytes
+### data — 33 bytes
 
 | offset | field | size |
 | --- | --- | --- |
@@ -163,15 +162,15 @@ Creates **DWallet** PDA after DKG attestation.
 
 ---
 
-## commit_signature (disc 43) - NOA only
+## CommitSignature (disc 43) — NOA only
 
-Writes signature into **MessageApproval**.
+Writes signature into **MessageApproval** or **PartialUserSignature** (dispatches by target account discriminator).
 
 ### accounts
 
 | # | account | writable | signer |
 | --- | --- | --- | --- |
-| 0 | message_approval | yes | no |
+| 0 | target_account | yes | no |
 | 1 | nek | no | no |
 | 2 | noa | no | yes |
 
@@ -187,6 +186,8 @@ Writes signature into **MessageApproval**.
 
 # voting example program (not dWallet program)
 
+**Verify** instruction layouts and account lists against the **voting** example tree in [`examples.md`](examples.md) (paths under `chains/solana/examples/voting/`) — they may drift from this snapshot.
+
 ## create_proposal (disc 0)
 
 ### accounts
@@ -199,15 +200,15 @@ Writes signature into **MessageApproval**.
 | 3 | payer | yes | yes |
 | 4 | system_program | no | no |
 
-### data - 103 bytes
+### data
 
-`proposal_id(32) | message_hash(32) | user_pubkey(32) | signature_scheme(1) | quorum(4 LE u32) | message_approval_bump(1) | bump(1)`
+See example `lib.rs` / TS e2e for current byte layout (`proposal_id`, message fields, `signature_scheme`, quorum, bumps).
 
 ---
 
 ## cast_vote (disc 1)
 
-### accounts - base
+### accounts — base
 
 | # | account | writable | signer |
 | --- | --- | --- | --- |
@@ -217,7 +218,7 @@ Writes signature into **MessageApproval**.
 | 3 | payer | yes | yes |
 | 4 | system_program | no | no |
 
-### accounts - when quorum reached (+5)
+### accounts — when quorum reached (+5)
 
 | # | account |
 | --- | --- |
@@ -227,7 +228,7 @@ Writes signature into **MessageApproval**.
 | 8 | cpi_authority |
 | 9 | dwallet_program |
 
-### data - 35 bytes
+### data — 35 bytes
 
 `proposal_id(32) | vote(1) | vote_record_bump(1) | cpi_authority_bump(1)`
 
@@ -244,8 +245,8 @@ Writes signature into **MessageApproval**.
 
 **Multisig** PDA `["multisig", create_key]`, 395 bytes: disc, version, create_key, threshold (u16), member_count (u16), tx_index (u32), dwallet, bump, members (10×32).
 
-**Transaction** PDA `["transaction", multisig, tx_index_le]`, 432 bytes: `message_hash` offset 70; `approval_count` / `rejection_count` from offset 135; `message_data_len` at 174; `message_data` at 176 (256 bytes).
+**Transaction** PDA `["transaction", multisig, tx_index_le]`, 432 bytes: field offsets per example sources.
 
 **ApprovalRecord** `["approval", transaction, member]`, 68 bytes.
 
-At `approval_count >= threshold`, the reference program CPI-calls **approve_message** and may call **transfer_future_sign**.
+At `approval_count >= threshold`, the reference program CPI-calls **approve_message** (with coordinator + new ix layout) and may call **TransferFutureSign**. On-disk layout: [`examples.md`](examples.md) (`multisig/`).

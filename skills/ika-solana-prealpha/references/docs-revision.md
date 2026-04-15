@@ -6,12 +6,23 @@ Published book: [solana pre-alpha docs](https://solana-pre-alpha.ika.xyz/) is bu
 
 | field | value |
 | --- | --- |
-| commit (full) | `40ba20db9da903ef27bd6a8d15c06de48c4c8c55` |
-| commit (short) | `40ba20d` |
-| upstream commit date (UTC) | 2026-04-08 |
-| recorded in skill | 2026-04-08 |
+| commit (full) | `bbef8cf12bf12fe0bdefb58194d26b3985336508` |
+| commit (short) | `bbef8cf` |
+| upstream commit date (UTC) | 2026-04-15 |
+| recorded in skill | 2026-04-15 |
+
+**`docs/` and this commit:** Git does not assign a separate commit to the `docs/` folder. The SHA above is a **normal repository commit**; it pins **every path in the tree at that instant**, including all of **`docs/`**. Stale checks that filter to `docs/` (below) ask whether **book sources on `main`** changed since that commit—not whether you need a second stored hash.
+
+**Optional fingerprint (docs subtree only):** After checking out that commit locally, `git rev-parse HEAD:docs` prints the **tree object id** for the `docs/` directory. You may copy it into a maintainer note when bumping; it changes only when `docs/` content at the recorded commit differs from another revision. It is **redundant** with the commit SHA for “which snapshot” but can help scripts that compare trees.
 
 **Interpretation:** This skill’s prose and book-derived summaries were last aligned with the **`docs/`** tree at that commit. **Only** changes under `docs/` in `ika-pre-alpha` matter when deciding whether this skill’s documentation excerpts may be stale (ignore unrelated program, proto, or crate churn unless the maintainer also updates this bundle).
+
+## devnet spot-check (account `space`)
+
+Optional sanity check that deployed program account sizes match the book: `getProgramAccounts` on the dWallet program id with `filters: [{ "dataSize": N }]` and compare each result’s `account.space` to **`docs/src/reference/accounts.md`** in `ika-pre-alpha` at the tracked commit.
+
+- **2026-04-14:** **`dataSize: 312`** (MessageApproval) — returned many accounts, all with **`space: 312`**.
+- **Same date:** **`dataSize: 139`** (GasDeposit) — **no accounts** on devnet (expected if nobody created gas deposits); book still lists **139 bytes** for GasDeposit.
 
 ## detecting updates (docs/ only)
 
